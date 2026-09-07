@@ -1,7 +1,25 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { User, Mail, Calendar, Compass, PlusCircle, Map, ShieldCheck, LogOut } from 'lucide-react';
+import { User, Mail, Calendar, Compass, PlusCircle, Map, ShieldCheck, LogOut, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.12 }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 25, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
+  }
+};
 
 const Dashboard = () => {
   const { user, logoutUser, token } = useContext(AuthContext);
@@ -21,80 +39,117 @@ const Dashboard = () => {
     : 'Recently';
 
   return (
-    <div className="main-content" style={{ justifyContent: 'flex-start', paddingTop: '2rem' }}>
-      <div className="dashboard-container">
-        {/* Welcome Banner */}
-        <div className="welcome-card">
+    <div className="main-content" style={{ justifyContent: 'flex-start', paddingTop: '2.5rem' }}>
+      <motion.div 
+        className="dashboard-container"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Animated Welcome Banner Card */}
+        <motion.div variants={itemVariants} className="welcome-card">
           <div className="welcome-text">
-            <span className="badge" style={{ marginBottom: '0.6rem' }}>Authentication Verified</span>
+            <span className="badge" style={{ marginBottom: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <ShieldCheck size={14} color="#a5b4fc" />
+              <span>JWT Authentication Verified</span>
+            </span>
             <h1>Welcome back, {user?.name || 'Traveler'}! 👋</h1>
-            <p>Your TripVault is active and ready for your travel memories.</p>
+            <p>Your TripVault profile is active and ready for travel memory logs.</p>
           </div>
           <div>
-            <button onClick={handleLogout} className="logout-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout} 
+              className="logout-btn" 
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
               <LogOut size={18} />
               <span>Logout</span>
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Info Grid */}
-        <div className="grid-cards" style={{ marginBottom: '2rem' }}>
-          <div className="card">
-            <h3>
-              <User color="#818cf8" size={20} /> User Profile
-            </h3>
-            <p style={{ marginTop: '0.5rem', fontWeight: 600, color: '#fff', fontSize: '1.05rem' }}>
+        {/* User Info & Security Grid */}
+        <motion.div variants={itemVariants} className="grid-cards" style={{ marginBottom: '2.25rem' }}>
+          {/* Profile Card */}
+          <motion.div className="card" whileHover={{ y: -6 }}>
+            <div style={{ background: 'rgba(99, 102, 241, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '1rem' }}>
+              <User color="#818cf8" size={24} />
+            </div>
+            <h3>User Profile</h3>
+            <p style={{ marginTop: '0.4rem', fontWeight: 700, color: '#fff', fontSize: '1.1rem' }}>
               {user?.name}
             </p>
-            <p style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.3rem' }}>
+            <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.4rem' }}>
               <Mail size={15} color="#94a3b8" />
               <span>{user?.email}</span>
             </p>
-            <p style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.3rem' }}>
+            <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>
               <Calendar size={15} color="#94a3b8" />
               <span>Joined: {formattedDate}</span>
             </p>
-          </div>
+          </motion.div>
 
-          <div className="card">
-            <h3>
-              <ShieldCheck color="#34d399" size={20} /> Security Status
-            </h3>
-            <p style={{ marginTop: '0.5rem', color: '#6ee7b7', fontWeight: 600 }}>
-              JWT Session Active
+          {/* Security Status Card */}
+          <motion.div className="card" whileHover={{ y: -6 }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '1rem' }}>
+              <ShieldCheck color="#34d399" size={24} />
+            </div>
+            <h3>Session Status</h3>
+            <p style={{ marginTop: '0.4rem', color: '#6ee7b7', fontWeight: 700, fontSize: '1.05rem' }}>
+              JWT Bearer Token Active
             </p>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem', wordBreak: 'break-all' }}>
-              Token Preview: <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.2rem 0.4rem', borderRadius: '4px' }}>{token ? `${token.substring(0, 24)}...` : 'None'}</code>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', wordBreak: 'break-all' }}>
+              Token Preview: <code style={{ background: 'rgba(0,0,0,0.4)', padding: '0.2rem 0.5rem', borderRadius: '6px', color: '#a5b4fc' }}>{token ? `${token.substring(0, 26)}...` : 'None'}</code>
             </p>
-          </div>
+          </motion.div>
 
-          <div className="card">
-            <h3>
-              <Compass color="#38bdf8" size={20} /> Travel Stats
-            </h3>
-            <p style={{ marginTop: '0.5rem', fontWeight: 600, color: '#fff', fontSize: '1.2rem' }}>
+          {/* Travel Stats Teaser Card */}
+          <motion.div className="card" whileHover={{ y: -6 }}>
+            <div style={{ background: 'rgba(56, 189, 248, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '1rem' }}>
+              <Compass color="#38bdf8" size={24} />
+            </div>
+            <h3>Travel Memories</h3>
+            <p style={{ marginTop: '0.4rem', fontWeight: 700, color: '#fff', fontSize: '1.2rem' }}>
               0 Trips Logged
             </p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Ready for Week 2: Trip creation & photo uploads!
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+              Week 1 Setup Complete! Prepared for Week 2 trip logs.
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
-        {/* Feature Teaser Card */}
-        <div className="card" style={{ background: 'rgba(15, 23, 42, 0.5)', borderStyle: 'dashed', textAlign: 'center', padding: '3rem 2rem' }}>
-          <Map size={48} color="#818cf8" style={{ margin: '0 auto 1rem auto' }} />
-          <h2 style={{ fontSize: '1.4rem', marginBottom: '0.5rem' }}>Your Journal is Empty</h2>
-          <p style={{ maxWidth: '500px', margin: '0 auto 1.5rem auto', color: 'var(--text-muted)' }}>
-            Week 1 foundation setup is complete! In upcoming weeks, you will be able to log destinations, upload photos, and organize your trip timeline here.
+        {/* Week 2 Teaser Feature Box */}
+        <motion.div 
+          variants={itemVariants}
+          className="card" 
+          style={{ background: 'rgba(15, 23, 42, 0.65)', borderStyle: 'dashed', textAlign: 'center', padding: '3.5rem 2rem' }}
+        >
+          <motion.div 
+            animate={{ y: [0, -8, 0] }} 
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <Map size={54} color="#818cf8" style={{ margin: '0 auto 1.25rem auto' }} />
+          </motion.div>
+          
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.6rem', fontWeight: 800 }}>Your Journal is Ready</h2>
+          <p style={{ maxWidth: '540px', margin: '0 auto 1.75rem auto', color: 'var(--text-muted)', fontSize: '0.975rem' }}>
+            Week 1 foundation setup is complete! In upcoming weeks, you will be able to add trip destinations, upload photo galleries, and organize your memory timeline here.
           </p>
-          <button className="btn-submit" style={{ width: 'auto', padding: '0.7rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }} onClick={() => alert('Week 1 Authentication Complete! Ready for Week 2 features.')}>
-            <PlusCircle size={18} />
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-submit" 
+            style={{ width: 'auto', padding: '0.85rem 1.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.6rem' }} 
+            onClick={() => alert('✨ Week 1 Setup & Authentication Complete! Ready for Week 2 Trip Creation.')}
+          >
+            <PlusCircle size={20} />
             <span>Create New Trip (Coming Week 2)</span>
-          </button>
-        </div>
-      </div>
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

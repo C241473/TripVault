@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { User, Mail, Lock, AlertCircle, Compass } from 'lucide-react';
+import { User, Mail, Lock, AlertCircle, Compass, CheckCircle2, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -57,28 +58,46 @@ const Register = () => {
 
   return (
     <div className="main-content">
-      <div className="auth-card">
+      <motion.div 
+        className="auth-card"
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div className="auth-header">
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.8rem' }}>
-            <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: '0.8rem', borderRadius: '50%', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-              <Compass size={32} color="#38bdf8" />
+          <motion.div 
+            style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1, rotate: 360 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
+          >
+            <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '0.9rem', borderRadius: '50%', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+              <Compass size={36} color="#38bdf8" />
             </div>
-          </div>
+          </motion.div>
           <h2>Create Account</h2>
           <p>Join TripVault to log and share your travel memories</p>
         </div>
 
-        {error && (
-          <div className="alert alert-error">
-            <AlertCircle size={18} />
-            <span>{error}</span>
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              className="alert alert-error"
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AlertCircle size={18} />
+              <span>{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
-            <div style={{ position: 'relative' }}>
+            <div className="input-wrapper">
               <input
                 type="text"
                 id="name"
@@ -89,66 +108,85 @@ const Register = () => {
                 onChange={handleChange}
                 required
               />
+              <User className="input-icon" size={18} />
             </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className="form-control"
-              placeholder="name@example.com"
-              value={email}
-              onChange={handleChange}
-              required
-            />
+            <div className="input-wrapper">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="form-control"
+                placeholder="name@example.com"
+                value={email}
+                onChange={handleChange}
+                required
+              />
+              <Mail className="input-icon" size={18} />
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="form-control"
-              placeholder="Minimum 6 characters"
-              value={password}
-              onChange={handleChange}
-              required
-            />
+            <div className="input-wrapper">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                className="form-control"
+                placeholder="Minimum 6 characters"
+                value={password}
+                onChange={handleChange}
+                required
+              />
+              <Lock className="input-icon" size={18} />
+            </div>
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              className="form-control"
-              placeholder="Re-enter password"
-              value={confirmPassword}
-              onChange={handleChange}
-              required
-            />
+            <div className="input-wrapper">
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                className="form-control"
+                placeholder="Re-enter password"
+                value={confirmPassword}
+                onChange={handleChange}
+                required
+              />
+              <Lock className="input-icon" size={18} />
+            </div>
           </div>
 
-          <button type="submit" className="btn-submit" disabled={isSubmitting}>
+          <motion.button 
+            type="submit" 
+            className="btn-submit" 
+            disabled={isSubmitting}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
             {isSubmitting ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
                 <span className="spinner"></span> Creating Account...
               </span>
             ) : (
-              'Register Account'
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <span>Register Account</span>
+                <ArrowRight size={18} />
+              </span>
             )}
-          </button>
+          </motion.button>
         </form>
 
         <div className="auth-footer">
           Already have an account? <Link to="/login">Sign in here</Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

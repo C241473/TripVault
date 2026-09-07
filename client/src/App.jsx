@@ -13,6 +13,13 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="app-container">
+          {/* Animated Background Gradient Ambient Orbs */}
+          <div className="bg-ambient">
+            <div className="blob blob-1"></div>
+            <div className="blob blob-2"></div>
+            <div className="blob blob-3"></div>
+          </div>
+
           <Navbar />
           <Routes>
             {/* Public Routes */}
@@ -25,7 +32,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
             </Route>
 
-            {/* Catch-all fallback */}
+            {/* Fallback Route */}
             <Route path="*" element={<Home />} />
           </Routes>
         </div>
