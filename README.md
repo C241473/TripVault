@@ -1,10 +1,10 @@
-# 🗺️ TripVault — Travel Memory Journal (Week 1)
+# 🗺️ TripVault — Travel Memory Journal (Week 1 & Week 2)
 
 > **Virtual Internship Program • Full Stack (MERN) | Powered by CodGen**  
-> **Theme:** Project Setup & Authentication  
+> **Theme:** Week 1: Setup & Authentication | Week 2: Trip Management — CRUD Operations  
 > **Stack:** Node.js • Express • MongoDB • React (Vite)
 
-TripVault is a travel memory journal web application where users can log trips, upload photos, and share memories. Week 1 lays the complete foundation of the project with a robust Node.js/Express backend server, MongoDB database integration, and a React (Vite) frontend with full JWT authentication flow.
+TripVault is a travel memory journal web application where users can log trips, upload photos, and share memories. Week 2 adds full **CRUD (Create, Read, Update, Delete)** operations for trip management, allowing users to create, view, edit, and delete their travel entries securely.
 
 ---
 
@@ -14,16 +14,16 @@ TripVault is a travel memory journal web application where users can log trips, 
 tripvault/
 ├── client/                     # React (Vite) Frontend
 │   ├── src/
-│   │   ├── components/         # Reusable UI components (Navbar, ProtectedRoute)
-│   │   ├── context/            # Global AuthContext (JWT & state management)
+│   │   ├── components/         # Navbar, ProtectedRoute, TripCard, TripModal
+│   │   ├── context/            # AuthContext (JWT & state management)
 │   │   ├── pages/              # Home, Login, Register, Dashboard
 │   │   ├── App.jsx             # Main App router
 │   │   └── main.jsx            # Entry point
 │   ├── index.html
 │   └── package.json
 ├── server/                     # Node.js + Express Backend
-│   ├── models/                 # User.js (Mongoose Schema)
-│   ├── routes/                 # auth.js (Register, Login, Me)
+│   ├── models/                 # User.js, Trip.js (Mongoose Schemas)
+│   ├── routes/                 # auth.js, trips.js (Auth & Trip CRUD Routes)
 │   ├── middleware/             # authMiddleware.js (JWT Verification)
 │   ├── .env                    # Environment config
 │   ├── .env.example            # Environment variables template
@@ -35,99 +35,74 @@ tripvault/
 
 ---
 
-## 🚀 Features Built (Week 1)
+## 🚀 Features Built
 
-### Backend (Express + MongoDB)
-- **Database Model**: User model with `name`, `email` (unique), `password` (hashed), and timestamps.
-- **Password Hashing**: Secure password hashing using `bcryptjs` before saving users.
-- **Registration Endpoint**: `POST /api/auth/register` creates new user and returns JWT token.
-- **Login Endpoint**: `POST /api/auth/login` validates user credentials and returns JWT token.
-- **Protected Endpoint**: `GET /api/auth/me` returns current authenticated user information.
-- **Security & CORS**: CORS enabled and `.env` configured for secrets protection.
+### Week 1: Authentication & Setup
+- **User Model**: User model with `name`, `email` (unique), `password` (hashed with `bcryptjs`), and timestamps.
+- **Registration**: `POST /api/auth/register` creates user & returns JWT token.
+- **Login**: `POST /api/auth/login` verifies credentials & returns JWT token.
+- **Protected Endpoint**: `GET /api/auth/me` returns authenticated user profile.
+- **Frontend Auth**: React Router setup, JWT stored in `localStorage`, `<ProtectedRoute />` guard, and glassmorphic UI.
 
-### Frontend (React + Vite)
-- **Vite Integration**: React application configured with Vite for lightning-fast build performance.
-- **Routing**: `react-router-dom` setup with routes (`/`, `/login`, `/register`, `/dashboard`).
-- **Protected Route Guard**: `<ProtectedRoute />` protects `/dashboard` and redirects unauthenticated users to `/login`.
-- **JWT Storage**: JWT token persisted in `localStorage` with `AuthContext` managing global auth state.
-- **UI Design**: Modern, responsive UI with interactive forms, loading indicators, error feedback, and quick user actions.
-
----
-
-## 🛠️ Getting Started / Setup Guide
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v16 or higher recommended)
-- [MongoDB](https://www.mongodb.com/) (Local installation or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) connection URI)
-
----
-
-### 1️⃣ Setting Up the Backend Server
-
-Navigate to the `server` directory:
-```bash
-cd server
-```
-
-Install dependencies:
-```bash
-npm install
-```
-
-Create a `.env` file inside the `server/` directory (or copy `.env.example`):
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/tripvault
-JWT_SECRET=tripvault_secret_key_codgen_2026
-```
-*(Replace `MONGO_URI` with your MongoDB Atlas connection string if using cloud database)*
-
-Start the backend server:
-```bash
-npm start
-# or for development with auto-reload:
-npm run dev
-```
-
-The backend server will run at: **`http://localhost:5000`**
-
----
-
-### 2️⃣ Setting Up the Frontend Client
-
-Open a new terminal window and navigate to the `client` directory:
-```bash
-cd client
-```
-
-Install dependencies:
-```bash
-npm install
-```
-
-Start the Vite development server:
-```bash
-npm run dev
-```
-
-The frontend app will run at: **`http://localhost:5173`**
+### Week 2: Trip Management (CRUD Operations)
+- **Trip Model (`server/models/Trip.js`)**:
+  - `title` (String, required)
+  - `destination` (String, required)
+  - `startDate` & `endDate` (Date)
+  - `description` (String)
+  - `rating` (Number, 1-5 stars)
+  - `user` (ObjectId, ref: 'User', required)
+- **Protected Trip API (`/api/trips`)**:
+  - `POST /api/trips`: Create a new trip for logged-in user.
+  - `GET /api/trips`: Get all trips belonging to logged-in user only.
+  - `GET /api/trips/:id`: Get single trip (verifies user ownership).
+  - `PUT /api/trips/:id`: Update trip (verifies user ownership before saving).
+  - `DELETE /api/trips/:id`: Delete trip (verifies user ownership with confirmation prompt).
+- **Dynamic Dashboard UI**:
+  - Displays dynamic **"Trips Logged"** counter (`0, 1, 2, 3...`) matching user's trip count.
+  - Trip Cards displaying title, destination, dates, description, star rating (⭐ 1-5), Edit button, and Delete button.
+  - Create and Edit Modal forms with field validation and loading indicators.
+  - Friendly empty state when user has no trips yet.
 
 ---
 
 ## 🧪 API Endpoints Overview
 
+### Authentication Routes (`/api/auth`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/register` | Register a new user (`name`, `email`, `password`) | Public |
 | `POST` | `/api/auth/login` | Authenticate user & return JWT token (`email`, `password`) | Public |
-| `GET` | `/api/auth/me` | Fetch currently logged-in user profile | Protected (Requires `Authorization: Bearer <token>`) |
+| `GET` | `/api/auth/me` | Fetch currently logged-in user profile | Protected |
+
+### Trip Routes (`/api/trips`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/trips` | Create a new trip for the logged-in user | Protected |
+| `GET` | `/api/trips` | Get all trips belonging to the logged-in user | Protected |
+| `GET` | `/api/trips/:id` | Get a single trip by ID (Owner only) | Protected |
+| `PUT` | `/api/trips/:id` | Update trip fields (title, destination, dates, rating, etc.) | Protected |
+| `DELETE` | `/api/trips/:id` | Permanently delete a trip (Owner only) | Protected |
 
 ---
 
-## 🔒 Security Best Practices
-- Passwords are never stored in plain text.
-- Environment variables (`.env`) are excluded via `.gitignore`.
-- JWT tokens expire in 7 days and are verified on all protected server endpoints.
+## 🛠️ Setup & Run Guide
+
+### 1️⃣ Server Setup
+```bash
+cd server
+npm install
+npm start
+```
+*Runs on port 5000: `http://localhost:5000`*
+
+### 2️⃣ Client Setup
+```bash
+cd client
+npm install
+npm run dev
+```
+*Runs on port 5173: `http://localhost:5173`*
 
 ---
 

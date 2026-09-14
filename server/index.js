@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
+const tripRoutes = require('./routes/trips');
 
 // Load environment variables
 dotenv.config();
@@ -17,13 +18,14 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/trips', tripRoutes);
 
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({
     message: '🗺️ Welcome to TripVault API Server!',
     status: 'Server is running',
-    version: '1.0.0'
+    version: '2.0.0 (Week 2 - Trip Management Enabled)'
   });
 });
 
@@ -40,7 +42,8 @@ mongoose
     console.log('✅ Connected to MongoDB successfully!');
     app.listen(PORT, () => {
       console.log(`🚀 TripVault Backend Server running on port ${PORT}`);
-      console.log(`🔗 API Base URL: http://localhost:${PORT}/api/auth`);
+      console.log(`🔗 Auth API: http://localhost:${PORT}/api/auth`);
+      console.log(`🔗 Trip API: http://localhost:${PORT}/api/trips`);
     });
   })
   .catch((err) => {
