@@ -6,6 +6,19 @@ const authMiddleware = require('../middleware/authMiddleware');
 // All routes require valid JWT authentication
 router.use(authMiddleware);
 
+// Default curated travel images list
+const defaultImages = [
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', // Beach
+  'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80', // Mountain
+  'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', // Paris
+  'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', // Tokyo
+  'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80'  // Rome
+];
+
+const getRandomImage = () => {
+  return defaultImages[Math.floor(Math.random() * defaultImages.length)];
+};
+
 /**
  * @route   POST /api/trips
  * @desc    Create a new trip for logged-in user
@@ -13,7 +26,7 @@ router.use(authMiddleware);
  */
 router.post('/', async (req, res) => {
   try {
-    const { title, destination, startDate, endDate, description, rating } = req.body;
+    const { title, destination, startDate, endDate, description, rating, image } = req.body;
 
     if (!title || !destination) {
       return res.status(400).json({ message: 'Title and Destination are required fields.' });
@@ -26,6 +39,7 @@ router.post('/', async (req, res) => {
       endDate: endDate || null,
       description: description ? description.trim() : '',
       rating: rating ? Number(rating) : 5,
+      image: image && image.trim() !== '' ? image.trim() : getRandomImage(),
       user: req.user.id
     });
 
@@ -93,7 +107,7 @@ router.get('/:id', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { title, destination, startDate, endDate, description, rating } = req.body;
+    const { title, destination, startDate, endDate, description, rating, image } = req.body;
 
     let trip = await Trip.findById(req.params.id);
 
@@ -113,6 +127,7 @@ router.put('/:id', async (req, res) => {
     if (endDate !== undefined) trip.endDate = endDate;
     if (description !== undefined) trip.description = description.trim();
     if (rating !== undefined) trip.rating = Number(rating);
+    if (image !== undefined) trip.image = image.trim() !== '' ? image.trim() : getRandomImage();
 
     const updatedTrip = await trip.save();
 

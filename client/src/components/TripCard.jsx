@@ -2,6 +2,8 @@ import React from 'react';
 import { MapPin, Calendar, Star, Edit3, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+const defaultFallbackImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
+
 const TripCard = ({ trip, onEdit, onDelete }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
@@ -23,78 +25,129 @@ const TripCard = ({ trip, onEdit, onDelete }) => {
       stars.push(
         <Star
           key={i}
-          size={16}
+          size={15}
           fill={i <= num ? '#f59e0b' : 'none'}
           color={i <= num ? '#f59e0b' : '#64748b'}
-          style={{ transition: 'all 0.2s ease' }}
         />
       );
     }
     return stars;
   };
 
+  const imageUrl = trip.image && trip.image.trim() !== '' ? trip.image : defaultFallbackImage;
+
   return (
     <motion.div
       className="card trip-card"
-      whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)' }}
+      style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(99, 102, 241, 0.25)' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.8rem' }}>
-        <div>
-          <span className="badge" style={{ marginBottom: '0.4rem', background: 'rgba(6, 182, 212, 0.15)', borderColor: 'rgba(6, 182, 212, 0.3)', color: '#38bdf8' }}>
-            <MapPin size={12} style={{ marginRight: '4px' }} />
-            {trip.destination}
-          </span>
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '0.2rem', color: '#ffffff' }}>
-            {trip.title}
-          </h3>
-        </div>
+      {/* Travel Photo Header Banner with Gradient Overlay */}
+      <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
+        <motion.img
+          src={imageUrl}
+          alt={trip.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          whileHover={{ scale: 1.08 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = defaultFallbackImage;
+          }}
+        />
 
-        <div style={{ display: 'flex', gap: '0.3rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.3rem 0.6rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Gradient Overlay for text contrast */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)' }} />
+
+        {/* Destination Pill Tag */}
+        <span
+          className="badge"
+          style={{
+            position: 'absolute',
+            top: '12px',
+            left: '12px',
+            background: 'rgba(9, 13, 22, 0.75)',
+            backdropFilter: 'blur(10px)',
+            borderColor: 'rgba(56, 189, 248, 0.4)',
+            color: '#38bdf8',
+            fontSize: '0.75rem',
+            padding: '0.35rem 0.75rem'
+          }}
+        >
+          <MapPin size={12} style={{ marginRight: '4px' }} />
+          {trip.destination}
+        </span>
+
+        {/* Star Rating Badge */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            background: 'rgba(9, 13, 22, 0.75)',
+            backdropFilter: 'blur(10px)',
+            padding: '0.35rem 0.6rem',
+            borderRadius: '9999px',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            display: 'flex',
+            gap: '0.2rem'
+          }}
+        >
           {renderStars(trip.rating)}
         </div>
       </div>
 
-      {(startFormatted || endFormatted) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.8rem' }}>
-          <Calendar size={15} color="#818cf8" />
-          <span>
-            {startFormatted || 'N/A'} {endFormatted ? `— ${endFormatted}` : ''}
-          </span>
+      {/* Card Content Details */}
+      <div style={{ padding: '1.4rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <div>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', marginBottom: '0.4rem' }}>
+            {trip.title}
+          </h3>
+
+          {(startFormatted || endFormatted) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.8rem' }}>
+              <Calendar size={14} color="#818cf8" />
+              <span>
+                {startFormatted || 'N/A'} {endFormatted ? `— ${endFormatted}` : ''}
+              </span>
+            </div>
+          )}
+
+          {trip.description && (
+            <p style={{ color: '#cbd5e1', fontSize: '0.9rem', marginBottom: '1.2rem', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {trip.description}
+            </p>
+          )}
         </div>
-      )}
 
-      {trip.description && (
-        <p style={{ color: '#cbd5e1', fontSize: '0.925rem', marginBottom: '1.25rem', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
-          {trip.description}
-        </p>
-      )}
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onEdit(trip)}
+            className="nav-link"
+            style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#a5b4fc', padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
+          >
+            <Edit3 size={14} />
+            <span>Edit</span>
+          </motion.button>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onEdit(trip)}
-          className="nav-link"
-          style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#a5b4fc', padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
-        >
-          <Edit3 size={15} />
-          <span>Edit</span>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => onDelete(trip._id)}
-          className="logout-btn"
-          style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
-        >
-          <Trash2 size={15} />
-          <span>Delete</span>
-        </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onDelete(trip._id)}
+            className="logout-btn"
+            style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
+          >
+            <Trash2 size={14} />
+            <span>Delete</span>
+          </motion.button>
+        </div>
       </div>
     </motion.div>
   );

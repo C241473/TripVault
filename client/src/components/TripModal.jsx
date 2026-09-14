@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Star, FileText, Compass, AlertCircle } from 'lucide-react';
+import { X, MapPin, Calendar, Star, Compass, AlertCircle, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const photoPresets = [
+  { name: '🏖️ Beach', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' },
+  { name: '🏔️ Mountain', url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80' },
+  { name: '🗼 Paris', url: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80' },
+  { name: '⛩️ Tokyo', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80' },
+  { name: '🏛️ Rome', url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80' }
+];
 
 const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +17,8 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     startDate: '',
     endDate: '',
     description: '',
-    rating: 5
+    rating: 5,
+    image: ''
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,7 +31,8 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
         startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
         endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
         description: initialData.description || '',
-        rating: initialData.rating || 5
+        rating: initialData.rating || 5,
+        image: initialData.image || ''
       });
     } else {
       setFormData({
@@ -31,7 +41,8 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
         startDate: '',
         endDate: '',
         description: '',
-        rating: 5
+        rating: 5,
+        image: ''
       });
     }
     setError('');
@@ -46,6 +57,10 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
 
   const handleRatingChange = (val) => {
     setFormData({ ...formData, rating: val });
+  };
+
+  const handleSelectPreset = (url) => {
+    setFormData({ ...formData, image: url });
   };
 
   const handleSubmit = async (e) => {
@@ -131,6 +146,47 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
                 onChange={handleChange}
                 required
               />
+            </div>
+
+            {/* Travel Cover Photo Section & Presets */}
+            <div className="form-group">
+              <label htmlFor="image">Cover Photo URL (Optional)</label>
+              <input
+                type="url"
+                id="image"
+                name="image"
+                className="form-control"
+                style={{ paddingLeft: '1rem' }}
+                placeholder="https://images.unsplash.com/..."
+                value={formData.image}
+                onChange={handleChange}
+              />
+              <div style={{ marginTop: '0.6rem' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
+                  <Sparkles size={13} color="#38bdf8" /> Click a quick travel photo preset:
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {photoPresets.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset.url)}
+                      style={{
+                        background: formData.image === preset.url ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.06)',
+                        border: formData.image === preset.url ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: formData.image === preset.url ? '#fff' : '#cbd5e1',
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
