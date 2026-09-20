@@ -12,6 +12,16 @@ const generateToken = (userId) => {
   return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' });
 };
 
+// Helper function to generate default username from email or name
+const generateDefaultUsername = (email, name) => {
+  let base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (base.length < 3 && name) {
+    base = name.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  }
+  const randomNum = Math.floor(1000 + Math.random() * 9000);
+  return `${base || 'traveller'}_${randomNum}`;
+};
+
 /**
  * @route   POST /api/auth/register
  * @desc    Register a new user
@@ -19,7 +29,7 @@ const generateToken = (userId) => {
  */
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, username, bio } = req.body;
 
     // Basic Validation
     if (!name || !email || !password) {
@@ -31,9 +41,21 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       return res.status(400).json({ message: 'A user with this email address already exists' });
+    }
+
+    // Auto-generate or format username
+    let finalUsername = username ? username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') : '';
+    if (!finalUsername || finalUsername.length < 3) {
+      finalUsername = generateDefaultUsername(email, name);
+    }
+
+    // Ensure unique username
+    let usernameExists = await User.findOne({ username: finalUsername });
+    if (usernameExists) {
+      finalUsername = `${finalUsername}_${Math.floor(100 + Math.random() * 900)}`;
     }
 
     // Hash password using bcryptjs
@@ -43,8 +65,10 @@ router.post('/register', async (req, res) => {
     // Create user
     const newUser = new User({
       name: name.trim(),
+      username: finalUsername,
       email: email.toLowerCase().trim(),
-      password: hashedPassword
+      password: hashedPassword,
+      bio: bio ? bio.trim() : 'Passionate traveller logging memories on TripVault 🗺️'
     });
 
     await newUser.save();
@@ -58,7 +82,9 @@ router.post('/register', async (req, res) => {
       user: {
         id: newUser._id,
         name: newUser.name,
+        username: newUser.username,
         email: newUser.email,
+        bio: newUser.bio,
         createdAt: newUser.createdAt
       }
     });
@@ -94,6 +120,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials. Incorrect password.' });
     }
 
+    // Ensure user has a username
+    if (!user.username) {
+      user.username = generateDefaultUsername(user.email, user.name);
+      await user.save();
+    }
+
     // Create JWT token
     const token = generateToken(user._id);
 
@@ -103,7 +135,9 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
+        bio: user.bio,
         createdAt: user.createdAt
       }
     });
@@ -124,11 +158,20 @@ router.get('/me', authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Ensure user has a username
+    if (!user.username) {
+      user.username = generateDefaultUsername(user.email, user.name);
+      await user.save();
+    }
+
     return res.status(200).json({
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
+        bio: user.bio,
         createdAt: user.createdAt
       }
     });

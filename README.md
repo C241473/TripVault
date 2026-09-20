@@ -1,10 +1,13 @@
-# 🗺️ TripVault — Travel Memory Journal (Week 1 & Week 2)
+# 🗺️ TripVault — Travel Memory Journal (Week 1, Week 2 & Week 3)
 
 > **Virtual Internship Program • Full Stack (MERN) | Powered by CodGen**  
-> **Theme:** Week 1: Setup & Authentication | Week 2: Trip Management — CRUD Operations  
-> **Stack:** Node.js • Express • MongoDB • React (Vite)
+> **Theme:**  
+> - Week 1: Project Setup & Authentication  
+> - Week 2: Trip Management — CRUD Operations  
+> - Week 3: Photo Uploads (Cloudinary + Multer) & Public User Profiles (`/profile/:username`)  
+> **Stack:** Node.js • Express • MongoDB • React (Vite) • Cloudinary • Multer
 
-TripVault is a travel memory journal web application where users can log trips, upload photos, and share memories. Week 2 adds full **CRUD (Create, Read, Update, Delete)** operations for trip management, allowing users to create, view, edit, and delete their travel entries securely.
+TripVault is a travel memory journal web application where users can log trips, upload photos, and share public profiles. Week 3 introduces cloud photo storage with Cloudinary and Multer, trip photo galleries, and public traveller profiles (`/profile/:username`) accessible without login.
 
 ---
 
@@ -14,18 +17,18 @@ TripVault is a travel memory journal web application where users can log trips, 
 tripvault/
 ├── client/                     # React (Vite) Frontend
 │   ├── src/
-│   │   ├── components/         # Navbar, ProtectedRoute, TripCard, TripModal
+│   │   ├── components/         # Navbar, ProtectedRoute, TripCard, TripModal, TripDetailModal, EditProfileModal
 │   │   ├── context/            # AuthContext (JWT & state management)
-│   │   ├── pages/              # Home, Login, Register, Dashboard
+│   │   ├── pages/              # Home, Login, Register, Dashboard, PublicProfile
 │   │   ├── App.jsx             # Main App router
 │   │   └── main.jsx            # Entry point
 │   ├── index.html
 │   └── package.json
 ├── server/                     # Node.js + Express Backend
-│   ├── models/                 # User.js, Trip.js (Mongoose Schemas)
-│   ├── routes/                 # auth.js, trips.js (Auth & Trip CRUD Routes)
-│   ├── middleware/             # authMiddleware.js (JWT Verification)
-│   ├── .env                    # Environment config
+│   ├── models/                 # User.js (username, bio), Trip.js (coverImage, photos)
+│   ├── routes/                 # auth.js, trips.js, users.js (Public & Protected APIs)
+│   ├── middleware/             # authMiddleware.js, upload.js (Multer + Cloudinary)
+│   ├── .env                    # Environment config (CLOUDINARY credentials)
 │   ├── .env.example            # Environment variables template
 │   ├── index.js                # Express Server entry point
 │   └── package.json
@@ -38,51 +41,50 @@ tripvault/
 ## 🚀 Features Built
 
 ### Week 1: Authentication & Setup
-- **User Model**: User model with `name`, `email` (unique), `password` (hashed with `bcryptjs`), and timestamps.
-- **Registration**: `POST /api/auth/register` creates user & returns JWT token.
-- **Login**: `POST /api/auth/login` verifies credentials & returns JWT token.
-- **Protected Endpoint**: `GET /api/auth/me` returns authenticated user profile.
-- **Frontend Auth**: React Router setup, JWT stored in `localStorage`, `<ProtectedRoute />` guard, and glassmorphic UI.
+- User model with password hashing (`bcryptjs`) & JWT token authentication.
+- Auth pages (Register, Login, Protected Dashboard) with React Router & AuthContext.
 
 ### Week 2: Trip Management (CRUD Operations)
-- **Trip Model (`server/models/Trip.js`)**:
-  - `title` (String, required)
-  - `destination` (String, required)
-  - `startDate` & `endDate` (Date)
-  - `description` (String)
-  - `rating` (Number, 1-5 stars)
-  - `user` (ObjectId, ref: 'User', required)
-- **Protected Trip API (`/api/trips`)**:
-  - `POST /api/trips`: Create a new trip for logged-in user.
-  - `GET /api/trips`: Get all trips belonging to logged-in user only.
-  - `GET /api/trips/:id`: Get single trip (verifies user ownership).
-  - `PUT /api/trips/:id`: Update trip (verifies user ownership before saving).
-  - `DELETE /api/trips/:id`: Delete trip (verifies user ownership with confirmation prompt).
-- **Dynamic Dashboard UI**:
-  - Displays dynamic **"Trips Logged"** counter (`0, 1, 2, 3...`) matching user's trip count.
-  - Trip Cards displaying title, destination, dates, description, star rating (⭐ 1-5), Edit button, and Delete button.
-  - Create and Edit Modal forms with field validation and loading indicators.
-  - Friendly empty state when user has no trips yet.
+- Full CRUD operations (`POST`, `GET`, `GET /:id`, `PUT /:id`, `DELETE /:id`) for trip entries.
+- Ownership authorization on all trip mutations.
+
+### Week 3: Photo Uploads & Public Profiles
+- **Photo Uploads (Cloudinary + Multer)**:
+  - `POST /api/trips/:id/upload`: Protected route uploading image via Multer/Cloudinary, setting `coverImage` & appending to `photos` array.
+  - File upload input on Create & Edit forms with live photo previews and preset travel photos.
+  - Interactive `TripDetailModal` showing full photo grid gallery per trip.
+- **Public User Profiles (`/profile/:username`)**:
+  - User model updated with `username` (unique, required) and `bio` (optional).
+  - `GET /api/users/:username/profile`: **Public route (No auth required)** returning safe profile info (`name`, `username`, `bio`, `createdAt`) and all public trips. Excludes sensitive `email` & `password`.
+  - `PUT /api/users/profile`: Protected route allowing logged-in user to update `bio` and `username`.
+  - Public React page at `/profile/:username` viewable without logging in.
 
 ---
 
-## 🧪 API Endpoints Overview
+## 🧪 API Endpoints Reference
 
 ### Authentication Routes (`/api/auth`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register a new user (`name`, `email`, `password`) | Public |
-| `POST` | `/api/auth/login` | Authenticate user & return JWT token (`email`, `password`) | Public |
-| `GET` | `/api/auth/me` | Fetch currently logged-in user profile | Protected |
+| `POST` | `/api/auth/register` | Register user (`name`, `email`, `password`) | Public |
+| `POST` | `/api/auth/login` | Authenticate user & return JWT token | Public |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile | Protected |
 
 ### Trip Routes (`/api/trips`)
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/trips` | Create a new trip for the logged-in user | Protected |
-| `GET` | `/api/trips` | Get all trips belonging to the logged-in user | Protected |
-| `GET` | `/api/trips/:id` | Get a single trip by ID (Owner only) | Protected |
-| `PUT` | `/api/trips/:id` | Update trip fields (title, destination, dates, rating, etc.) | Protected |
-| `DELETE` | `/api/trips/:id` | Permanently delete a trip (Owner only) | Protected |
+| `POST` | `/api/trips` | Create a new trip | Protected |
+| `GET` | `/api/trips` | Get logged-in user's trips | Protected |
+| `GET` | `/api/trips/:id` | Get single trip details | Protected |
+| `PUT` | `/api/trips/:id` | Update trip details | Protected |
+| `DELETE` | `/api/trips/:id` | Delete a trip | Protected |
+| `POST` | `/api/trips/:id/upload` | Upload photo & attach Cloudinary URL to trip | Protected |
+
+### User Profile Routes (`/api/users`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/users/:username/profile` | Fetch public profile & public trips (Safe fields only) | **Public** |
+| `PUT` | `/api/users/profile` | Update logged-in user's bio or username | Protected |
 
 ---
 

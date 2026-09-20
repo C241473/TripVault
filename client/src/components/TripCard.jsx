@@ -1,10 +1,10 @@
 import React from 'react';
-import { MapPin, Calendar, Star, Edit3, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, Star, Edit3, Trash2, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const defaultFallbackImage = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80';
 
-const TripCard = ({ trip, onEdit, onDelete }) => {
+const TripCard = ({ trip, onEdit, onDelete, onViewDetails, isReadOnly }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return null;
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -34,20 +34,22 @@ const TripCard = ({ trip, onEdit, onDelete }) => {
     return stars;
   };
 
-  const imageUrl = trip.image && trip.image.trim() !== '' ? trip.image : defaultFallbackImage;
+  const imageUrl = trip.coverImage || trip.image || defaultFallbackImage;
+  const photoCount = Array.isArray(trip.photos) ? trip.photos.length : 1;
 
   return (
     <motion.div
       className="card trip-card"
-      style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: onViewDetails ? 'pointer' : 'default' }}
       whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(99, 102, 241, 0.25)' }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
+      onClick={() => onViewDetails && onViewDetails(trip)}
     >
       {/* Travel Photo Header Banner with Gradient Overlay */}
-      <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: '185px', overflow: 'hidden' }}>
         <motion.img
           src={imageUrl}
           alt={trip.title}
@@ -125,29 +127,37 @@ const TripCard = ({ trip, onEdit, onDelete }) => {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.6rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onEdit(trip)}
-            className="nav-link"
-            style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#a5b4fc', padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
-          >
-            <Edit3 size={14} />
-            <span>Edit</span>
-          </motion.button>
+        {!isReadOnly && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.8rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <span style={{ fontSize: '0.78rem', color: '#818cf8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Eye size={14} /> Click to view gallery ({photoCount})
+            </span>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onDelete(trip._id)}
-            className="logout-btn"
-            style={{ padding: '0.45rem 0.9rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
-          >
-            <Trash2 size={14} />
-            <span>Delete</span>
-          </motion.button>
-        </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => { e.stopPropagation(); onEdit(trip); }}
+                className="nav-link"
+                style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', color: '#a5b4fc', padding: '0.4rem 0.8rem', fontSize: '0.825rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}
+              >
+                <Edit3 size={14} />
+                <span>Edit</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => { e.stopPropagation(); onDelete(trip._id); }}
+                className="logout-btn"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', cursor: 'pointer' }}
+              >
+                <Trash2 size={14} />
+                <span>Delete</span>
+              </motion.button>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

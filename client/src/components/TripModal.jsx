@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Star, Compass, AlertCircle, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { X, MapPin, Calendar, Star, Compass, AlertCircle, Image as ImageIcon, Sparkles, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const photoPresets = [
@@ -18,13 +18,16 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
     endDate: '',
     description: '',
     rating: 5,
-    image: ''
+    coverImage: ''
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
+      const existingImg = initialData.coverImage || initialData.image || '';
       setFormData({
         title: initialData.title || '',
         destination: initialData.destination || '',
@@ -32,8 +35,9 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
         endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
         description: initialData.description || '',
         rating: initialData.rating || 5,
-        image: initialData.image || ''
+        coverImage: existingImg
       });
+      setImagePreview(existingImg);
     } else {
       setFormData({
         title: '',
@@ -42,9 +46,11 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
         endDate: '',
         description: '',
         rating: 5,
-        image: ''
+        coverImage: ''
       });
+      setImagePreview('');
     }
+    setImageFile(null);
     setError('');
   }, [initialData, isOpen]);
 
@@ -60,7 +66,27 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
   };
 
   const handleSelectPreset = (url) => {
-    setFormData({ ...formData, image: url });
+    setFormData({ ...formData, coverImage: url });
+    setImagePreview(url);
+    setImageFile(null);
+  };
+
+  // File Upload Selection & Live Image Preview
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('File size exceeds 5MB limit.');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData((prev) => ({ ...prev, coverImage: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -74,7 +100,7 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
 
     try {
       setIsSubmitting(true);
-      await onSubmit(formData);
+      await onSubmit({ ...formData, imageFile });
       onClose();
     } catch (err) {
       console.error('Error submitting trip modal:', err);
@@ -148,22 +174,49 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
               />
             </div>
 
-            {/* Travel Cover Photo Section & Presets */}
+            {/* Photo Upload Input & Live Image Preview */}
             <div className="form-group">
-              <label htmlFor="image">Cover Photo URL (Optional)</label>
-              <input
-                type="url"
-                id="image"
-                name="image"
-                className="form-control"
-                style={{ paddingLeft: '1rem' }}
-                placeholder="https://images.unsplash.com/..."
-                value={formData.image}
-                onChange={handleChange}
-              />
-              <div style={{ marginTop: '0.6rem' }}>
+              <label htmlFor="imageFile">Photo Upload (Cloudinary / File)</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input
+                  type="file"
+                  id="imageFile"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                <label
+                  htmlFor="imageFile"
+                  className="nav-btn-primary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    padding: '0.6rem 1rem'
+                  }}
+                >
+                  <Upload size={16} />
+                  <span>Choose Photo File</span>
+                </label>
+                {imageFile && <span style={{ fontSize: '0.825rem', color: '#6ee7b7' }}>{imageFile.name}</span>}
+              </div>
+
+              {/* Image Preview Box */}
+              {imagePreview && (
+                <div style={{ marginTop: '0.75rem', height: '120px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)', position: 'relative' }}>
+                  <img src={imagePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <span style={{ position: 'absolute', bottom: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', color: '#fff' }}>
+                    Photo Preview
+                  </span>
+                </div>
+              )}
+
+              {/* Preset Travel Photo Quick Select */}
+              <div style={{ marginTop: '0.8rem' }}>
                 <span style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-                  <Sparkles size={13} color="#38bdf8" /> Click a quick travel photo preset:
+                  <Sparkles size={13} color="#38bdf8" /> Or choose a travel preset photo:
                 </span>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                   {photoPresets.map((preset, idx) => (
@@ -172,9 +225,9 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
                       type="button"
                       onClick={() => handleSelectPreset(preset.url)}
                       style={{
-                        background: formData.image === preset.url ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.06)',
-                        border: formData.image === preset.url ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: formData.image === preset.url ? '#fff' : '#cbd5e1',
+                        background: formData.coverImage === preset.url ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.06)',
+                        border: formData.coverImage === preset.url ? '1px solid #818cf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: formData.coverImage === preset.url ? '#fff' : '#cbd5e1',
                         padding: '0.25rem 0.6rem',
                         borderRadius: '6px',
                         fontSize: '0.78rem',
@@ -264,7 +317,7 @@ const TripModal = ({ isOpen, onClose, onSubmit, initialData }) => {
               <button type="submit" className="btn-submit" style={{ width: 'auto', marginTop: 0, padding: '0.8rem 1.8rem' }} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span className="spinner"></span> Saving...
+                    <span className="spinner"></span> Uploading & Saving...
                   </span>
                 ) : (
                   initialData ? 'Update Trip' : 'Save Trip'

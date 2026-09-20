@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Compass, LogOut, User as UserIcon, LogIn, UserPlus } from 'lucide-react';
+import { Compass, LogOut, User as UserIcon, LogIn, UserPlus, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Navbar = () => {
@@ -12,6 +12,8 @@ const Navbar = () => {
     logoutUser();
     navigate('/login');
   };
+
+  const username = user?.username || 'user';
 
   return (
     <motion.nav 
@@ -30,9 +32,16 @@ const Navbar = () => {
         {isAuthenticated ? (
           <>
             <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
-              <Link to="/dashboard" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Link to="/dashboard" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <UserIcon size={18} color="#818cf8" />
-                <span>{user?.name || 'Dashboard'}</span>
+                <span>Dashboard</span>
+              </Link>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <Link to={`/profile/${username}`} className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#38bdf8' }}>
+                <Globe size={18} />
+                <span>My Profile</span>
               </Link>
             </motion.div>
 

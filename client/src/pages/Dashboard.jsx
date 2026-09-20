@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { User, Mail, Calendar, Compass, PlusCircle, Map, ShieldCheck, LogOut, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User, Mail, Calendar, Compass, PlusCircle, Map, ShieldCheck, LogOut, Loader2, Globe, Edit, Sparkles } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import TripCard from '../components/TripCard';
 import TripModal from '../components/TripModal';
+import TripDetailModal from '../components/TripDetailModal';
+import EditProfileModal from '../components/EditProfileModal';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -25,13 +27,15 @@ const itemVariants = {
 };
 
 const Dashboard = () => {
-  const { user, logoutUser, token } = useContext(AuthContext);
+  const { user, logoutUser, token, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
+  const [viewingDetailTrip, setViewingDetailTrip] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Fetch user trips on load
@@ -73,17 +77,38 @@ const Dashboard = () => {
     setEditingTrip(null);
   };
 
-  // Submit Handler for Create & Edit
+  // Save Trip (Create & Edit) + File Upload Support
   const handleSaveTrip = async (formData) => {
+    let savedTripRes;
+    const { imageFile, ...tripData } = formData;
+
     if (editingTrip) {
       // Edit mode
-      await axios.put(`/api/trips/${editingTrip._id}`, formData);
+      savedTripRes = await axios.put(`/api/trips/${editingTrip._id}`, tripData);
     } else {
       // Create mode
-      await axios.post('/api/trips', formData);
+      savedTripRes = await axios.post('/api/trips', tripData);
     }
+
+    const createdId = savedTripRes.data.trip?._id || editingTrip?._id;
+
+    // If an image file was selected, upload via POST /api/trips/:id/upload
+    if (imageFile && createdId) {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', imageFile);
+      await axios.post(`/api/trips/${createdId}/upload`, uploadFormData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+
     // Refresh list
     await fetchTrips();
+  };
+
+  // Save Profile (Bio & Username Update)
+  const handleSaveProfile = async (profileData) => {
+    await axios.put('/api/users/profile', profileData);
+    window.location.reload();
   };
 
   // Delete Handler with Confirmation Prompt
@@ -107,6 +132,8 @@ const Dashboard = () => {
       })
     : 'Recently';
 
+  const username = user?.username || 'user';
+
   return (
     <div className="main-content" style={{ justifyContent: 'flex-start', paddingTop: '2.5rem' }}>
       <motion.div
@@ -123,17 +150,43 @@ const Dashboard = () => {
               <span>JWT Authentication Verified</span>
             </span>
             <h1>Welcome back, {user?.name || 'Traveler'}! 👋</h1>
-            <p>Manage your travel memories and log new adventures below.</p>
+            <p style={{ color: '#38bdf8', fontWeight: 700 }}>@{username}</p>
+            <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginTop: '0.3rem' }}>
+              {user?.bio || 'Passionate traveller logging memories on TripVault 🗺️'}
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link to={`/profile/${username}`}>
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                className="nav-btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <Globe size={16} />
+                <span>My Public Profile</span>
+              </motion.button>
+            </Link>
+
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setIsEditProfileOpen(true)}
+              className="nav-link"
+              style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+            >
+              <Edit size={16} />
+              <span>Edit Bio</span>
+            </motion.button>
+
             <motion.button
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={handleOpenCreateModal}
               className="btn-submit"
-              style={{ width: 'auto', marginTop: 0, padding: '0.75rem 1.4rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              style={{ width: 'auto', marginTop: 0, padding: '0.65rem 1.2rem', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
             >
-              <PlusCircle size={18} />
+              <PlusCircle size={16} />
               <span>Create Trip</span>
             </motion.button>
 
@@ -142,7 +195,7 @@ const Dashboard = () => {
               whileTap={{ scale: 0.95 }}
               onClick={handleLogout}
               className="logout-btn"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', fontSize: '0.85rem' }}
             >
               <LogOut size={16} />
               <span>Logout</span>
@@ -161,6 +214,7 @@ const Dashboard = () => {
             <p style={{ marginTop: '0.2rem', fontWeight: 700, color: '#fff', fontSize: '1.1rem' }}>
               {user?.name}
             </p>
+            <p style={{ color: '#38bdf8', fontSize: '0.85rem', fontWeight: 600 }}>@{username}</p>
             <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>
               <Mail size={15} color="#94a3b8" />
               <span>{user?.email}</span>
@@ -171,21 +225,24 @@ const Dashboard = () => {
             </p>
           </motion.div>
 
-          {/* Session Status Card */}
+          {/* Public Profile Link Card */}
           <motion.div className="card" whileHover={{ y: -4 }}>
-            <div style={{ background: 'rgba(16, 185, 129, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '0.8rem' }}>
-              <ShieldCheck color="#34d399" size={24} />
+            <div style={{ background: 'rgba(168, 85, 247, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '0.8rem' }}>
+              <Globe color="#c084fc" size={24} />
             </div>
-            <h3>Session Status</h3>
-            <p style={{ marginTop: '0.2rem', color: '#6ee7b7', fontWeight: 700, fontSize: '1.05rem' }}>
-              JWT Bearer Token Active
+            <h3>Public Profile URL</h3>
+            <p style={{ marginTop: '0.2rem', color: '#c084fc', fontWeight: 700, fontSize: '0.95rem', wordBreak: 'break-all' }}>
+              /profile/{username}
             </p>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem', wordBreak: 'break-all' }}>
-              Token Preview: <code style={{ background: 'rgba(0,0,0,0.4)', padding: '0.2rem 0.5rem', borderRadius: '6px', color: '#a5b4fc' }}>{token ? `${token.substring(0, 24)}...` : 'None'}</code>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+              Publicly viewable by anyone — no login required to view your public travels!
             </p>
+            <Link to={`/profile/${username}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#38bdf8', fontSize: '0.85rem', fontWeight: 700, marginTop: '0.6rem' }}>
+              <span>View Public Page →</span>
+            </Link>
           </motion.div>
 
-          {/* Dynamic Travel Stats Card (Increases 1, 2, 3...) */}
+          {/* Dynamic Travel Stats Card */}
           <motion.div className="card" whileHover={{ y: -4 }}>
             <div style={{ background: 'rgba(56, 189, 248, 0.12)', padding: '0.7rem', borderRadius: '12px', width: 'fit-content', marginBottom: '0.8rem' }}>
               <Compass color="#38bdf8" size={24} />
@@ -195,7 +252,7 @@ const Dashboard = () => {
               {trips.length} {trips.length === 1 ? 'Trip' : 'Trips'} Logged
             </p>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-              Week 2 CRUD Operations Active
+              Week 3 Cloud Photo Uploads Active
             </p>
           </motion.div>
         </motion.div>
@@ -203,9 +260,9 @@ const Dashboard = () => {
         {/* Section Header */}
         <motion.div variants={itemVariants} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Your Travel Journal</h2>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800 }}>Your Travel Journal & Photos</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Create, view, edit, and delete your travel entries
+              Upload photos, manage entries, or click a trip to view its full photo gallery
             </p>
           </div>
 
@@ -235,6 +292,7 @@ const Dashboard = () => {
                   trip={trip}
                   onEdit={handleOpenEditModal}
                   onDelete={handleDeleteTrip}
+                  onViewDetails={(selected) => setViewingDetailTrip(selected)}
                 />
               ))}
             </AnimatePresence>
@@ -251,7 +309,7 @@ const Dashboard = () => {
 
             <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', fontWeight: 800 }}>No Travel Memories Yet</h3>
             <p style={{ maxWidth: '480px', margin: '0 auto 1.5rem auto', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              You haven't added any trips to your vault. Click below to add your first travel memory!
+              You haven't added any trips to your vault. Click below to add your first travel memory and photo cover!
             </p>
 
             <motion.button
@@ -275,6 +333,22 @@ const Dashboard = () => {
         onSubmit={handleSaveTrip}
         initialData={editingTrip}
       />
+
+      {/* Edit Bio & Username Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        user={user}
+        onSave={handleSaveProfile}
+      />
+
+      {/* Trip Photo Gallery Detail Modal */}
+      {viewingDetailTrip && (
+        <TripDetailModal
+          trip={viewingDetailTrip}
+          onClose={() => setViewingDetailTrip(null)}
+        />
+      )}
     </div>
   );
 };

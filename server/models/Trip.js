@@ -28,9 +28,13 @@ const tripSchema = new mongoose.Schema(
       max: [5, 'Rating cannot exceed 5'],
       default: 5
     },
-    image: {
+    coverImage: {
       type: String,
       default: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80'
+    },
+    photos: {
+      type: [String],
+      default: []
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
